@@ -1,17 +1,23 @@
 import os
-from flask import *
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory
 from PIL import Image, ImageFilter
 
-
 app = Flask(__name__)
-UPLOAD_FOLDER = os.path.join(os.getcwd(),'uploads')
+
+# Define a pasta de uploads para armazenar as imagens
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Cria a pasta 'uploads' caso ela não exista
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def home():
-    image_url = request.args.get('image_url')
-    return render_template('index.html')
+    # Lista as imagens na pasta de uploads
+    image_files = [f for f in os.listdir(UPLOAD_FOLDER) if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
+    return render_template('index.html', image_files=image_files)
 
-@app.route('/upload',methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['imagem']
     original_file_path = os.path.join(UPLOAD_FOLDER, 'imagem_original.jpg')
@@ -23,22 +29,14 @@ def upload():
     return redirect(url_for('home'))
 
 def apply_filter(original_path, filtered_path):
-    # Abrir a imagem
     with Image.open(original_path) as img:
-        # Aplicar um filtro de borrão
         filtered_img = img.filter(ImageFilter.CONTOUR)
-        # Salvar a imagem filtrada com um nome diferente
-        filtered_img.save(filtered_path) 
-    
-    
-    return redirect(url_for('home'))
+        filtered_img.save(filtered_path)
 
-
-
-
-
-    
-
+# Rota para servir as imagens na pasta 'uploads'
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True)
+    app.run(debug=True)

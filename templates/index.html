@@ -14,7 +14,12 @@
             <button type="submit">Enviar</button>
         </p>
     </form>
-
+    <h2>Imagem</h2>
+    <div>
+        {% for image_file in image_files %}
+            <img src="{{ url_for('uploaded_file', filename=image_file) }}" alt="Imagem carregada" width="200">
+        {% endfor %}
+    </div>
     
     
 </body>
